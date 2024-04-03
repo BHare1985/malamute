@@ -1434,15 +1434,17 @@ s_server_config_service (s_server_t *self)
             if (streq (mechanism, "curve") && zsys_has_curve()) {
                 zsys_notice ("server is using CURVE security");
                 const char *keyfile = zconfig_get (section, "keyfile", NULL);
-                assert (keyfile);
+                if(keyfile) {
+                    zcert_t *server_cert = zcert_load(keyfile);
+                    assert (server_cert);
 
-                zcert_t *server_cert = zcert_load(keyfile);
-                assert (server_cert);
+                    self->server.public_key_txt = strdup(zcert_public_txt(server_cert));
 
-                self->server.public_key_txt = zcert_public_txt(server_cert);
-
-                zcert_apply (server_cert, self->router);
-                zsock_set_curve_server (self->router, 1);
+                    zcert_apply (server_cert, self->router);
+                    zsock_set_curve_server (self->router, 1);
+                }
+                else
+                    zsys_warning ("mechanism=%s is supported but did not find security/keyfile in config", mechanism);
             }
             else
                 zsys_warning ("mechanism=%s is not supported", mechanism);

@@ -849,20 +849,22 @@ s_get_server_port (zactor_t *server, char *endpoint)
 static void
 s_get_server_public_key_txt (zactor_t *server, char *server_public_key_txt)
 {
-    char *command;
+    char *command, *public_key_txt;
 
     int rc = zstr_sendx (server, "PUBLIC KEY", NULL);
     assert (rc == 0);
 
-    rc = zstr_recvx (server, &command, &server_public_key_txt, NULL);
+    rc = zstr_recvx (server, &command, &public_key_txt, NULL);
     assert (rc == 2);
     assert (strlen (command) == 10);
     assert (streq (command, "PUBLIC KEY"));
-    assert (strlen (server_public_key_txt) == 40);
-    assert (!streq (server_public_key_txt, "0000000000000000000000000000000000000000"));
+    assert (strlen (public_key_txt) == 40);
+    assert (!streq (public_key_txt, "0000000000000000000000000000000000000000"));
+
+    strcpy(server_public_key_txt, public_key_txt);
 
     zstr_free (&command);
-    //zstr_free (&public_key_txt);
+    zstr_free (&public_key_txt);
 }
 
 void
