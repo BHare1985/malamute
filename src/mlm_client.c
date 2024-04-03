@@ -123,6 +123,15 @@ client_terminate (client_t *self)
     zstr_free (&self->myaddress);
 }
 
+//  ---------------------------------------------------------------------------
+//  use_curve_security_mechanism
+//
+
+static void
+use_curve_security_mechanism (client_t *self)
+{
+    zsock_set_curve_publickey (self->dealer, self->args->publickey);
+}
 
 //  ---------------------------------------------------------------------------
 //  use_plain_security_mechanism

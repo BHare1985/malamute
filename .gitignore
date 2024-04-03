@@ -127,3 +127,6 @@ bindings/qt/selftest/selftest
 
 # editor backups
 *~
+/.idea
+/cmake-build-debug
+/.cmake

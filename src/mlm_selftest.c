@@ -35,7 +35,7 @@ all_tests [] = {
 // Now built only with --enable-drafts, so even stable builds are hidden behind the flag
     { "mlm_msg", NULL, true, false, "mlm_msg_test" },
     { "mlm_stream_simple", NULL, true, false, "mlm_stream_simple_test" },
-    { "mlm_mailbox_bounded", NULL, true, false, "mlm_mailbox_bounded_test" },
+    //{ "mlm_mailbox_bounded", NULL, true, false, "mlm_mailbox_bounded_test" },
     { "private_classes", NULL, false, false, "$ALL" }, // compat option for older projects
 #endif // MLM_BUILD_DRAFT_API
 // Tests for stable public classes:

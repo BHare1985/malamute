@@ -57,7 +57,8 @@ typedef enum {
     heartbeat_event = 18,
     command_invalid_event = 19,
     failed_event = 20,
-    other_event = 21
+    other_event = 21,
+    set_curve_auth_event = 1,
 } event_t;
 
 //  Names for state machine logging and error reporting
@@ -98,7 +99,8 @@ s_event_name [] = {
     "heartbeat",
     "command_invalid",
     "failed",
-    "other"
+    "other",
+    "set_curve_auth"
 };
 
 
@@ -109,6 +111,7 @@ s_event_name [] = {
 
 //  These are the different method arguments we manage automatically
 struct _client_args_t {
+    char *publickey;
     char *username;
     char *password;
     char *endpoint;
@@ -159,6 +162,8 @@ static int
     s_client_handle_expiry (zloop_t *loop, int timer_id, void *argument);
 static void
     s_satisfy_pedantic_compilers (void);
+static void
+    use_curve_security_mechanism (client_t *self);
 static void
     use_plain_security_mechanism (client_t *self);
 static void
@@ -472,6 +477,21 @@ s_client_execute (s_client_t *self, event_t event)
                         if (self->verbose)
                             zsys_debug ("%s:         $ use plain security mechanism", self->log_prefix);
                         use_plain_security_mechanism (&self->client);
+                    }
+                    if (!self->exception) {
+                        //  signal success
+                        if (self->verbose)
+                            zsys_debug ("%s:         $ signal success", self->log_prefix);
+                        signal_success (&self->client);
+                    }
+                }
+                else
+                if (self->event == set_curve_auth_event) {
+                    if (!self->exception) {
+                        //  use curve security mechanism
+                        if (self->verbose)
+                            zsys_debug ("%s:         $ use CURVE security mechanism", self->log_prefix);
+                        use_curve_security_mechanism (&self->client);
                     }
                     if (!self->exception) {
                         //  signal success
@@ -1403,6 +1423,12 @@ s_client_handle_cmdpipe (zloop_t *loop, zsock_t *reader, void *argument)
         s_client_execute (self, set_plain_auth_event);
     }
     else
+    if (streq (method, "SET CURVE AUTH")) {
+        zstr_free (&self->args.publickey);
+        zsock_recv (self->cmdpipe, "ss", &self->args.publickey);
+        s_client_execute (self, set_curve_auth_event);
+    }
+    else
     if (streq (method, "CONNECT")) {
         zstr_free (&self->args.endpoint);
         zstr_free (&self->args.address);
@@ -1746,7 +1772,7 @@ s_accept_reply (mlm_client_t *self, ...)
 
 //  ---------------------------------------------------------------------------
 //  Set PLAIN authentication username and password. If you do not call this, the
-//  client will use NULL authentication. TODO: add "set curve auth".
+//  client will use NULL authentication.
 //  Returns >= 0 if successful, -1 if interrupted.
 
 int
@@ -1760,6 +1786,21 @@ mlm_client_set_plain_auth (mlm_client_t *self, const char *username, const char 
     return self->status;
 }
 
+//  ---------------------------------------------------------------------------
+//  Set CURVE authentication publickey. If you do not call this, the
+//  client will use NULL authentication.
+//  Returns >= 0 if successful, -1 if interrupted.
+
+int
+mlm_client_set_curve_auth (mlm_client_t *self, const char *publickey)
+{
+    assert (self);
+
+    zsock_send (self->actor, "sss", "SET CURVE AUTH", publickey);
+    if (s_accept_reply (self, "SUCCESS", "FAILURE", NULL))
+        return -1;              //  Interrupted or timed-out
+    return self->status;
+}
 
 //  ---------------------------------------------------------------------------
 //  Connect to server endpoint, with specified timeout in msecs (zero means wait

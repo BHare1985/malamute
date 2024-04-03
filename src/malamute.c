@@ -117,6 +117,14 @@ int main (int argc, char *argv [])
         zstr_sendx (auth, "PLAIN", passwords, NULL);
         zsock_wait (auth);
     }
+
+    //  Do PLAIN password authentication if requested
+    const char *publickey = zconfig_resolve (config, "server/auth/curve", NULL);
+    if (publickey) {
+        zstr_sendx (auth, "CURVE", publickey, NULL);
+        zsock_wait (auth);
+    }
+
     //  Start Malamute server instance
     zactor_t *server = zactor_new (mlm_server, "Malamute");
     if (verbose)

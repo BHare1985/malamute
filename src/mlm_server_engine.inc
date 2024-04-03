@@ -1431,6 +1431,11 @@ s_server_config_service (s_server_t *self)
                 zsock_set_plain_server (self->router, 1);
             }
             else
+            if (streq (mechanism, "curve")) {
+                zsys_notice ("server is using CURVE security");
+                zsock_set_curve_server (self->router, 1);
+            }
+            else
                 zsys_warning ("mechanism=%s is not supported", mechanism);
         }
 #endif
