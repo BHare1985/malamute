@@ -58,7 +58,7 @@ typedef enum {
     command_invalid_event = 19,
     failed_event = 20,
     other_event = 21,
-    set_curve_auth_event = 1,
+    set_curve_auth_event = 22,
 } event_t;
 
 //  Names for state machine logging and error reporting

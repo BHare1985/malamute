@@ -1430,11 +1430,13 @@ s_server_config_service (s_server_t *self)
                 zsys_notice ("server is using PLAIN security");
                 zsock_set_plain_server (self->router, 1);
             }
+#ifdef ZMQ_HAVE_CURVE
             else
             if (streq (mechanism, "curve")) {
                 zsys_notice ("server is using CURVE security");
                 zsock_set_curve_server (self->router, 1);
             }
+#endif
             else
                 zsys_warning ("mechanism=%s is not supported", mechanism);
         }
