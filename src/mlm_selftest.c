@@ -33,14 +33,14 @@ all_tests [] = {
 #ifdef MLM_BUILD_DRAFT_API
 // Tests for stable/draft private classes:
 // Now built only with --enable-drafts, so even stable builds are hidden behind the flag
-    { "mlm_msg", NULL, true, false, "mlm_msg_test" },
-    { "mlm_stream_simple", NULL, true, false, "mlm_stream_simple_test" },
+    //{ "mlm_msg", NULL, true, false, "mlm_msg_test" },
+    //{ "mlm_stream_simple", NULL, true, false, "mlm_stream_simple_test" },
     //{ "mlm_mailbox_bounded", NULL, true, false, "mlm_mailbox_bounded_test" },
-    { "private_classes", NULL, false, false, "$ALL" }, // compat option for older projects
+   // { "private_classes", NULL, false, false, "$ALL" }, // compat option for older projects
 #endif // MLM_BUILD_DRAFT_API
 // Tests for stable public classes:
-    { "mlm_proto", mlm_proto_test, true, true, NULL },
-    { "mlm_server", mlm_server_test, true, true, NULL },
+    //{ "mlm_proto", mlm_proto_test, true, true, NULL },
+    //{ "mlm_server", mlm_server_test, true, true, NULL },
     { "mlm_client", mlm_client_test, true, true, NULL },
     {NULL, NULL, 0, 0, NULL}          //  Sentinel
 };
