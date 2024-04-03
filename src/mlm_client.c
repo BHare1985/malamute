@@ -146,6 +146,7 @@ use_plain_security_mechanism (client_t *self)
 {
     zsock_set_plain_username (self->dealer, self->args->username);
     zsock_set_plain_password (self->dealer, self->args->password);
+    assert (zsock_mechanism (self->dealer) == ZMQ_PLAIN);
 }
 
 
@@ -870,6 +871,10 @@ s_get_server_public_key_txt (zactor_t *server, char *server_public_key_txt)
 void
 mlm_client_test (bool verbose)
 {
+    verbose = true;
+    //mlm_stream_api_test(verbose);
+    //mlm_services_api_test(verbose);
+    //mlm_service_api_test(verbose);
 
     printf (" * mlm_client: \n");
     //  @selftest
@@ -913,6 +918,7 @@ mlm_client_test (bool verbose)
         rc = zsock_wait (auth);
         assert (rc == 0);
     }
+    rc = zstr_sendx (auth, "PLAIN", "src/passwords.cfg", NULL);
     assert (rc == 0);
     rc = zsock_wait (auth);
     assert (rc == 0);
@@ -921,6 +927,7 @@ mlm_client_test (bool verbose)
     client = mlm_client_new ();
     assert (client);
     mlm_client_set_verbose (client, verbose);
+    rc = mlm_client_set_plain_auth (client, "writer", "secret");
     assert ( rc == 0 );
     rc = mlm_client_connect (client, endpoint, 1000, "client_robust");
     assert ( rc == 0 );
@@ -1323,6 +1330,46 @@ mlm_client_test (bool verbose)
     assert (streq (content, "85"));
     zstr_free (&subject);
     zstr_free (&content);
+
+
+    //  Switch authenticator to test CURVE access
+    rc = zstr_sendx (auth, "CURVE", CURVE_ALLOW_ANY, NULL);
+    assert (rc == 0);
+    rc = zsock_wait (auth);
+    assert (rc == 0);
+
+
+
+    rc = zstr_sendx (auth, "CURVE", CURVE_ALLOW_ANY, NULL);
+    assert (rc == 0);
+    rc = zsock_wait (auth);
+    assert (rc == 0);
+
+    @@ -921,7 +929,20 @@ mlm_client_test (bool verbose)
+        client = mlm_client_new ();
+    assert (client);
+    mlm_client_set_verbose (client, verbose);
+
+    char* client_public_key_text = "8<raiZ9-yEX6vFHzDV}TIiPafO?YQP)B[!}(y5UT";
+    char* client_secret_key_text = "b0m]Qf28QSs:3aO75O{7Vc%F69YJwr[V>qGuW6S5";
+
+    rc = mlm_client_set_curve_auth (client, client_public_key_text, client_secret_key_text, server_public_key_txt);
+    assert ( rc == 0 );
+
+    //zconfig_t *config = zconfig_load ("src/mlm_client.cfg");
+    //const char *cert_store = zconfig_resolve (config, "server/auth/curve", NULL);
+    //if (cert_store) {
+    //    zstr_sendx (auth, "CURVE", cert_store, NULL);
+    //    zsock_wait (auth);
+    //}
+
+
+
+    char server_public_key_txt [40];
+    s_get_server_public_key_txt(server, server_public_key_txt);
+
+
+
 
 
     mlm_client_destroy (&writer1);
