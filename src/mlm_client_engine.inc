@@ -111,7 +111,6 @@ s_event_name [] = {
 
 //  These are the different method arguments we manage automatically
 struct _client_args_t {
-    char *publickey;
     char *username;
     char *password;
     char *endpoint;
@@ -119,6 +118,9 @@ struct _client_args_t {
     char *address;
     char *stream;
     char *pattern;
+    char *server_public_key_txt;
+    char *public_key_txt;
+    char *secret_key_txt;
 };
 
 typedef struct {
@@ -261,6 +263,9 @@ s_client_destroy (s_client_t **self_p)
         zstr_free (&self->args.address);
         zstr_free (&self->args.stream);
         zstr_free (&self->args.pattern);
+        zstr_free (&self->args.server_public_key_txt);
+        zstr_free (&self->args.public_key_txt);
+        zstr_free (&self->args.secret_key_txt);
         client_terminate (&self->client);
         mlm_proto_destroy (&self->message);
         zsock_destroy (&self->msgpipe);
@@ -1424,8 +1429,10 @@ s_client_handle_cmdpipe (zloop_t *loop, zsock_t *reader, void *argument)
     }
     else
     if (streq (method, "SET CURVE AUTH")) {
-        zstr_free (&self->args.publickey);
-        zsock_recv (self->cmdpipe, "ss", &self->args.publickey);
+        zstr_free (&self->args.server_public_key_txt);
+        zstr_free (&self->args.public_key_txt);
+        zstr_free (&self->args.secret_key_txt);
+        zsock_recv (self->cmdpipe, "sss", &self->args.public_key_txt, &self->args.secret_key_txt, &self->args.server_public_key_txt);
         s_client_execute (self, set_curve_auth_event);
     }
     else
@@ -1792,11 +1799,11 @@ mlm_client_set_plain_auth (mlm_client_t *self, const char *username, const char 
 //  Returns >= 0 if successful, -1 if interrupted.
 
 int
-mlm_client_set_curve_auth (mlm_client_t *self, const char *publickey)
+mlm_client_set_curve_auth (mlm_client_t *self, const char *public_key_txt, const char *secret_key_txt, const char *server_public_key_txt)
 {
     assert (self);
 
-    zsock_send (self->actor, "sss", "SET CURVE AUTH", publickey);
+    zsock_send (self->actor, "ssss", "SET CURVE AUTH", public_key_txt, secret_key_txt, server_public_key_txt);
     if (s_accept_reply (self, "SUCCESS", "FAILURE", NULL))
         return -1;              //  Interrupted or timed-out
     return self->status;

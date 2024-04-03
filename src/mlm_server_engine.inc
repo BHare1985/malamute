@@ -1430,13 +1430,20 @@ s_server_config_service (s_server_t *self)
                 zsys_notice ("server is using PLAIN security");
                 zsock_set_plain_server (self->router, 1);
             }
-#ifdef ZMQ_HAVE_CURVE
             else
-            if (streq (mechanism, "curve")) {
+            if (streq (mechanism, "curve") && zsys_has_curve()) {
                 zsys_notice ("server is using CURVE security");
+                const char *keyfile = zconfig_get (section, "keyfile", NULL);
+                assert (keyfile);
+
+                zcert_t *server_cert = zcert_load(keyfile);
+                assert (server_cert);
+
+                self->server.public_key_txt = zcert_public_txt(server_cert);
+
+                zcert_apply (server_cert, self->router);
                 zsock_set_curve_server (self->router, 1);
             }
-#endif
             else
                 zsys_warning ("mechanism=%s is not supported", mechanism);
         }
@@ -1485,6 +1492,12 @@ s_server_handle_pipe (zloop_t *loop, zsock_t *reader, void *argument)
         //  Return PORT + port number from the last bind, if any
         zstr_sendm (self->pipe, "PORT");
         zstr_sendf (self->pipe, "%d", self->port);
+    }
+    else
+    if (streq (method, "PUBLIC KEY")) {
+        //  Return PUBLICKEY + public_key from the last bind, if any
+        zstr_sendm (self->pipe, "PUBLIC KEY");
+        zstr_sendf (self->pipe, "%s", self->server.public_key_txt);
     }
     else                       //  Deprecated method name
     if (streq (method, "LOAD") || streq (method, "CONFIGURE")) {

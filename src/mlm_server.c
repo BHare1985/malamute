@@ -88,6 +88,7 @@ struct _server_t {
     zhashx_t *services;         //  Holds services by name
     zhashx_t *clients;          //  Holds clients by address
     mlm_msgq_cfg_t *service_queue_cfg; //  Service queue limits config
+    char *public_key_txt;           //  Holds the publickey text
 };
 
 
@@ -351,6 +352,7 @@ server_terminate (server_t *self)
     zhashx_destroy (&self->services);
     zhashx_destroy (&self->clients);
     mlm_msgq_cfg_destroy (&self->service_queue_cfg);
+    zstr_free (&self->public_key_txt);
 }
 
 //  Process server API method, return reply message if any

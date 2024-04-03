@@ -130,3 +130,4 @@ bindings/qt/selftest/selftest
 /.idea
 /cmake-build-debug
 /.cmake
+/cmake-build-debug-wsl

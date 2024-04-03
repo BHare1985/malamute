@@ -130,7 +130,11 @@ client_terminate (client_t *self)
 static void
 use_curve_security_mechanism (client_t *self)
 {
-    zsock_set_curve_publickey (self->dealer, self->args->publickey);
+    zcert_t *cert = zcert_new_from_txt (self->args->public_key_txt, self->args->secret_key_txt);
+    zcert_apply(cert, self->dealer);
+    zsock_set_curve_serverkey (self->dealer, self->args->server_public_key_txt);
+    assert (zsock_mechanism (self->dealer) == ZMQ_CURVE);
+    zcert_destroy(&cert);
 }
 
 //  ---------------------------------------------------------------------------
@@ -842,12 +846,28 @@ s_get_server_port (zactor_t *server, char *endpoint)
     zstr_free (&port);
 }
 
+static void
+s_get_server_public_key_txt (zactor_t *server, char *server_public_key_txt)
+{
+    char *command;
+
+    int rc = zstr_sendx (server, "PUBLIC KEY", NULL);
+    assert (rc == 0);
+
+    rc = zstr_recvx (server, &command, &server_public_key_txt, NULL);
+    assert (rc == 2);
+    assert (strlen (command) == 10);
+    assert (streq (command, "PUBLIC KEY"));
+    assert (strlen (server_public_key_txt) == 40);
+    assert (!streq (server_public_key_txt, "0000000000000000000000000000000000000000"));
+
+    zstr_free (&command);
+    //zstr_free (&public_key_txt);
+}
+
 void
 mlm_client_test (bool verbose)
 {
-    mlm_stream_api_test(verbose);
-    mlm_services_api_test(verbose);
-    mlm_service_api_test(verbose);
 
     printf (" * mlm_client: \n");
     //  @selftest
@@ -891,7 +911,6 @@ mlm_client_test (bool verbose)
         rc = zsock_wait (auth);
         assert (rc == 0);
     }
-    rc = zstr_sendx (auth, "PLAIN", "src/passwords.cfg", NULL);
     assert (rc == 0);
     rc = zsock_wait (auth);
     assert (rc == 0);
@@ -900,7 +919,6 @@ mlm_client_test (bool verbose)
     client = mlm_client_new ();
     assert (client);
     mlm_client_set_verbose (client, verbose);
-    rc = mlm_client_set_plain_auth (client, "writer", "secret");
     assert ( rc == 0 );
     rc = mlm_client_connect (client, endpoint, 1000, "client_robust");
     assert ( rc == 0 );

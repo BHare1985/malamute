@@ -541,6 +541,10 @@ configure_file(
     "${CMAKE_SOURCE_DIR}/src/passwords.cfg"
     "${CMAKE_CURRENT_BINARY_DIR}/src/passwords.cfg"
 @ONLY)
+configure_file(
+    "${CMAKE_SOURCE_DIR}/src/server.txt_secret"
+    "${CMAKE_CURRENT_BINARY_DIR}/src/server.txt_secret"
+@ONLY)
 
 set_directory_properties(
     PROPERTIES

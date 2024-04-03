@@ -116,13 +116,13 @@ int main (int argc, char *argv [])
     if (passwords) {
         zstr_sendx (auth, "PLAIN", passwords, NULL);
         zsock_wait (auth);
-    }
-
-    //  Do PLAIN password authentication if requested
-    const char *publickey = zconfig_resolve (config, "server/auth/curve", NULL);
-    if (publickey) {
-        zstr_sendx (auth, "CURVE", publickey, NULL);
-        zsock_wait (auth);
+    } else {
+        //  Do CURVE password authentication if requested
+        const char *cert_store = zconfig_resolve (config, "server/auth/curve", NULL);
+        if (cert_store) {
+            zstr_sendx (auth, "CURVE", cert_store, NULL);
+            zsock_wait (auth);
+        }
     }
 
     //  Start Malamute server instance
